@@ -27,3 +27,13 @@
     justify-content: center;
     align-items: center;
 }
+.correct {
+    background-color: green;
+}
+.includes {
+    background-color: yellow;
+}
+#info {
+    font-size: 2em;
+    text-align: center;
+}
