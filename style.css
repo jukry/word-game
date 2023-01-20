@@ -33,6 +33,9 @@
 .includes {
     background-color: yellow;
 }
+.wrong {
+    background-color: gray;
+}
 #info {
     font-size: 2em;
     text-align: center;
