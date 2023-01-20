@@ -4,6 +4,8 @@ const grid = document.getElementsByClassName("grid-item")
 const alphabet = ["A","B","C","D","E","F","G","H","I","J","K","L","M","N","O","P","Q","R","S","T","U","V","W","X","Y","Z"]
 const infoEl = document.getElementById("info")
 let tryNum = 0
+let wordArr = []
+let winner = false
 
 async function fetchWord(url) {
     const response = await fetch(url)
@@ -12,62 +14,84 @@ async function fetchWord(url) {
     return word
 }
 
-// let wordToGuess = await fetchWord(API_ENDPOINT)
-let wordToGuess = "await"
-console.log(wordToGuess)
+let wordToGuess = await fetchWord(API_ENDPOINT)
+//let wordToGuess = "ivory"
+let wordToGuessArr = wordToGuess.split("")
 
 page.addEventListener("keydown",(e) => {
-    if (alphabet.includes(e.key.toUpperCase()) || e.key == "Enter" || e.key == "Backspace") {
-        doStuff(e.key)
+    
+    if ((alphabet.includes(e.key.toUpperCase()) || e.key == "Enter" || e.key == "Backspace") && winner == false) {
+        commitLetter(e.key)
     }
 })
 
-let wordArr = []
-function doStuff(keyPressed) {
+function commitLetter(keyPressed) {
+    // row selector
     const gridElement = grid[tryNum].children
     if (keyPressed == "Backspace") {
         // remove last letter
         wordArr.pop()
         gridElement[wordArr.length].innerHTML = ""
-    } else if (keyPressed == "Enter") {
-        // check if word is correct or has matching letters
-        checkWord()
+    } else if (keyPressed == "Enter"  && wordArr.length === wordToGuess.length) {
+        // check if word is correct or has matching letters when Enter is pressed
+        checkWord(wordArr)
         tryNum++
         wordArr = []
-    } else if (wordArr.length < 5) {
+    } else if (wordArr.length < 5 && alphabet.includes(keyPressed.toUpperCase())) {
+        // add pressed letter in uppercase to the correct row, using wordArr.length value as index
         gridElement[wordArr.length].innerHTML = keyPressed.toUpperCase()
         wordArr.push(keyPressed)
     }
 }
 
-function checkWord() {
-    let word = wordArr.toString().replaceAll(",","")
-    if (word == wordToGuess) {
-        checkLetters(word)
+let map = makeMap(wordToGuessArr)
+
+function checkWord(word) {
+    // wordArr to string
+    let wordToString = word.toString().replaceAll(",","")
+
+    if (wordToString == wordToGuess) {
+        checkLetters(wordToString)
         infoEl.innerHTML = `Correct, the word is ${wordToGuess}`
-        page.removeEventListener("keydown")
+        winner = true
         return
     } else {
-        checkLetters(word)
+        checkLetters(wordToString)
     }
 }
 
 function checkLetters(wordFromCheckWord) {
     for (let i = 0;i < wordFromCheckWord.length;i++) {
         const gridElement = grid[tryNum].children[i]
-
+        
         if (wordFromCheckWord[i] == wordToGuess[i]) {
             gridElement.classList.toggle("correct")
-            
-        } else if (wordToGuess.includes(wordFromCheckWord[i])) {
-            console.log(wordToGuess.includes(wordFromCheckWord[i]),wordFromCheckWord[i])
-            for (let j = 0; j < wordToGuess.length; j++) {
-                gridElement.classList.toggle("includes")
-                
-            }
-            // pitää tarkistaa löytyykö sanasta jostain x kirjain jostain muusta kohtaa
-            console.log(`${wordFromCheckWord[i]} ${wordToGuess.split(wordFromCheckWord[i]).length-1}`) // etsi indeksi kirjaimelle
-            
+            map[wordFromCheckWord[i]]--
         }
     }
+    for (let i = 0;i < wordFromCheckWord.length;i++) {
+        const gridElement = grid[tryNum].children[i]
+
+        if (wordFromCheckWord[i] == wordToGuess[i]) {
+            // do nothing
+        } else if (wordToGuessArr.includes(wordFromCheckWord[i]) && map[wordFromCheckWord[i]] > 0) {
+            gridElement.classList.toggle("includes")
+            
+        } else {
+            gridElement.classList.toggle("wrong")
+        }
+    }
+}
+
+function makeMap(array) {
+    const obj = {}
+    for (let i = 0; i < array.length; i++) {
+        const letter = array[i];
+        if (obj[letter]) {
+            obj[letter]++
+        } else {
+            obj[letter] = 1
+        }
+    }
+    return obj
 }
